@@ -1,0 +1,4 @@
+iptables -A INPUT -p tcp --dport 9999 -j ACCEPT
+systemctl enable iptables
+systemctl start iptables
+service iptables save
