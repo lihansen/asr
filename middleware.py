@@ -1,5 +1,6 @@
 import socket
-import time
+import os
+from multiprocessing import Process
 from util import decoder
 from threading import Thread,Condition
 
@@ -7,7 +8,7 @@ class Server():
 
     def __init__(self):
         self.serv_sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        self.host = "192.168.0.163"
+        self.host = "192.168.0.114"
         self.port = 9999
         self.serv_sock.bind((self.host,self.port))
         self.serv_sock.listen(8)
@@ -20,11 +21,22 @@ class Server():
         while True:
             s, addr = self.serv_sock.accept()
             print(addr," connect")
-            con = Condition()
-            Thread(target=self._recv_send2,args=(s,con)).start()
-            Thread(target=self._recv_send2,args=(s,con)).start()
+            self._get_config_head(s)
 
+            pid = os.fork()
+            if pid == 0:
+                con = Condition()
+                Thread(target=self._recv_send2, args=(s, con)).start()
+                Thread(target=self._recv_send2, args=(s, con)).start()
 
+    def stop_all(self):
+        pid = os.fork()
+        if pid ==0:
+            self._stop_flag()
+
+    def _stop_flag(self):
+        input("getchar to stop\n")
+        self.stop = True
 
 
     # only receive 2048*6 size data chunk api
@@ -51,6 +63,17 @@ class Server():
             package_no += 1
 
 
+    def _get_config_head(self,client_s):
+        text = b""
+        while True:
+            msg = client_s.recv(10000)
+            text += msg
+            if b"\0" in msg:
+                break
+        print("----")
+        print(text.decode("utf-8"))
+
+
     # received data chunk length <= 2048*10 api
     def _recv_send2(self,client_s,con,host="192.168.0.164",post=9002 or 9000,chunk_size=2048*6):
 
@@ -69,7 +92,7 @@ class Server():
 
             con.acquire()
 
-            while not self.stop and same_times < 4:
+            while not self.stop and same_times <= 4:
                 data = client_s.recv(2048*10)
                 # data = self._process(data)
                 buffer += data
@@ -80,8 +103,9 @@ class Server():
                     buffer = buffer[chunk_size:]
 
                     if last_ret == ret and ret != b"":
-                        same_times +=1
+                        same_times += 1
                     else :
+                        same_times=0
                         last_ret=ret
 
                     package_no += 1
@@ -93,7 +117,7 @@ class Server():
 
             con.notify()
             con.wait()
-            # con.release()
+            con.release()
 
 
 
@@ -113,28 +137,10 @@ class Server():
 
 
 
-class client:
-    def __init__(self,host="192.168.0.163",port=9999):
-        self.host = host
-        self.port = port
-        self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._s.connect((self.host,self.port))
+s = Server()
+s.run_server()
+s.stop_all()
 
-
-    def send(self,data,package_no,size=2048*6):
-        # self._decoder.decoder_put_data(self._s,data_chunk,size,package_no)
-        data = bytes(package_no) + data
-        self._s.send(data)
-
-
-    def result(self):
-        b_result = self._decoder.decoder_get_result(self._s)
-        return self._to_str(b_result)
-
-
-
-
-Server().run_server()
 
 
 
