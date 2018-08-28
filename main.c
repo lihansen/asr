@@ -275,7 +275,7 @@ void PowerCount(int len, int inc, double data[], int n,double *f,int fh)
             else if  (Ratio_ch < 0.7692)
                 channel_flag1 = 2;
             else if  ((Diff_ch1>1.8)&&(Diff_ch2>1.8)&&(1.3>Ratio_ch)&&(Ratio_ch>0.7692))
-                channel_flag1 = 3;
+                channel_flag1 = 0; //3
             else
                 channel_flag1 = 0;
         }

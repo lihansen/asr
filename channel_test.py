@@ -284,20 +284,20 @@ def sender_offline(q):
             print(th_name,"  -",d.value)
 
 
-# record_thread = threading.Thread(target=record,args=(q1,q2),name="record")
-# send1_thead = threading.Thread(target=sender,args=(q1,),name="channel2")
-# send2_thead = threading.Thread(target=sender,args=(q2,),name="channel1")
-# writer1_thead = threading.Thread(target=file_writer,args=(q1,),name="1")
-# writer2_thead = threading.Thread(target=file_writer,args=(q2,),name="2")
-# from util import recorder
-# recorder().start(q1,q2)
-# # record_thread.start()
-# # while True:
-# #     if n == 2:
-# #         continue
-# #     else:
-# #         print("start")
-# #         send2_thead.start()
-# #         # send1_thead.start()
-# writer1_thead.start()
-# writer2_thead.start()
+record_thread = threading.Thread(target=record,args=(q1,q2),name="record")
+send1_thead = threading.Thread(target=sender,args=(q1,),name="channel2")
+send2_thead = threading.Thread(target=sender,args=(q2,),name="channel1")
+writer1_thead = threading.Thread(target=file_writer,args=(q1,),name="1")
+writer2_thead = threading.Thread(target=file_writer,args=(q2,),name="2")
+from util import recorder
+recorder().start(q1,q2)
+# record_thread.start()
+# while True:
+#     if n == 2:
+#         continue
+#     else:
+#         print("start")
+#         send2_thead.start()
+#         # send1_thead.start()
+writer1_thead.start()
+writer2_thead.start()

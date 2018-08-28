@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.bootcss.com/jquery/1.10.2/jquery.min.js"></script>
+    <style>
+        textarea{
+            height: 500px;
+            width: 20%;
+        }
+    </style>
+    <script>
+        function showUnreadNews() {
+            $(document).ready(function () {
+                $.ajax({
+                    type: "GET",
+                    url: "/getdata/",
+                    dataType: "json",
+                    success: function (data) {
+                        //alert(msg);
+                        $("#msg").append("data " + data);
+                    }
+                });
+            });
+        }
+
+        setInterval('showUnreadNews()', 500);//轮询执行，500ms一次
+
+    </script>
+</head>
+
+<body>
+
+    通道1：
+    <textarea id="channel1" readonly="readonly">
+
+    </textarea>
+
+    通道2：
+    <textarea id="channel2" readonly="readonly">
+
+    </textarea>
+
+    flag:
+    <textarea id="flag" readonly="readonly">
+
+    </textarea>
+</body>
+</html>

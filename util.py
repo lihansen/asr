@@ -4,6 +4,7 @@ import threading
 import socket
 import struct
 import wave
+import os
 import time
 
 from ctypes import *
@@ -52,7 +53,7 @@ class recorder:
             self._lib.get_flag(chunk,self._pout1,self._pout2,self._pflag,self._pout_flag,self._pnumber_flagch)
 
             if self._out_flag.value is 1 and self._number_flagch.value >= 16 and (self._number_flagch.value-16)%6 is 0:
-                print("flag:",self._flag.value,)
+                # print("flag:",self._flag.value,)
                 if self._flag.value is 0 or self._flag.value is 3:
                     q1.put(self._pout1[:])
                     q2.put(self._pout2[:])
@@ -81,11 +82,13 @@ class recorder:
 
 
 class wav_writer:
+
     def __init__(self,seconds,filename,n_frames=1024):
         self._time = int(16000 / n_frames * seconds)
         self._filename = filename
         self._data = []
         self._stop = False
+
 
     def _running(self,q):
         while self._time and not self._stop:
@@ -95,8 +98,10 @@ class wav_writer:
             self._time -= 1
         self.save()
 
+
     def start(self,q):
         threading.Thread(target=self._running,args=(q,)).start()
+
 
     def save(self):
         wf = wave.open(self._filename + ".wav","wb")
@@ -106,6 +111,7 @@ class wav_writer:
         wf.writeframes(b"".join(self._data))
         wf.close()
         print(self._filename,".wav 录音结束")
+
 
     def stop(self):
         self._stop = True
@@ -173,21 +179,24 @@ class sender:
 
 class send_to_middleware:
 
-    def __init__(self,host="192.168.0.163",port=9999):
+    def __init__(self,host="192.168.0.114",port=9999):
         self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.sock.connect((host,port))
         print("connect to middleware successful")
         self._stop = False
+        self.last_len = 0
 
 
     def _running(self,q):
-
+        self.sock.send("{配置文件内容}".encode("utf-8")+b"\0")
         while not self._stop:
             d = q.get()
             self.sock.send(d)
             ret = self.sock.recv(2048)
             ret = ret.decode("utf-8")
+            # print("\b"*len(ret))
             print(self._name,ret)
+
 
     def start(self,q,name):
         self._name = name
@@ -249,15 +258,21 @@ class decoder():
         return s
 
 if __name__ == "__main__":
+    host = ""
+    port = 0
+    with open(os.path.join(".","config.ini")) as f:
+        host,port = f.readlines()[:2]
+
+
     left = queue.Queue()
     right = queue.Queue()
 
     rec = recorder()
     rec.start(left,right)
 
-    s1 = send_to_middleware()
+    s1 = send_to_middleware(host,int(port))
     s1.start(left,"通道1")
-    s2 = send_to_middleware()
+    s2 = send_to_middleware(host,int(port))
     s2.start(right,"通道2")
 
 

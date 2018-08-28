@@ -29,10 +29,12 @@ class Server():
                 Thread(target=self._recv_send2, args=(s, con)).start()
                 Thread(target=self._recv_send2, args=(s, con)).start()
 
+
     def stop_all(self):
         pid = os.fork()
         if pid ==0:
             self._stop_flag()
+
 
     def _stop_flag(self):
         input("getchar to stop\n")
@@ -92,7 +94,7 @@ class Server():
 
             con.acquire()
 
-            while not self.stop and same_times <= 4:
+            while not self.stop and same_times <= 2:
                 data = client_s.recv(2048*10)
                 # data = self._process(data)
                 buffer += data
